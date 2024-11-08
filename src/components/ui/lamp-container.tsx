@@ -12,7 +12,7 @@ export const LampContainer = ({
   return (
     <div
       className={cn(
-        "h-screen w-screen flex flex-col items-center justify-center overflow-hidden",
+        "h-screen w-screen flex flex-col items-center justify-center overflow-hidden custom-hue-rotate",
         className
       )}
     >
