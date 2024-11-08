@@ -3,6 +3,14 @@ import { motion } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { Card } from "@/components/ui/card";
 import { LampContainer } from "@/components/ui/lamp-container";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 interface TimeLeft {
   days: number;
@@ -16,54 +24,63 @@ interface Quote {
   author: string;
 }
 
-const TARGET_DATE = new Date("2025-06-10T00:00:00");
 const START_DATE = new Date("2024-11-01T00:00:00");
-const TOTAL_TIME = TARGET_DATE.getTime() - START_DATE.getTime();
+// const TARGET_DATE = new Date("2025-06-10T00:00:00");
+// const TOTAL_TIME = TARGET_DATE.getTime() - START_DATE.getTime();
 
 const quotes: Quote[] = [
   {
     content: "The only way to do great work is to love what you do.",
-    author: "Steve Jobs"
+    author: "Steve Jobs",
   },
   {
     content: "Believe you can and you're halfway there.",
-    author: "Theodore Roosevelt"
+    author: "Theodore Roosevelt",
   },
   {
     content: "It does not matter how slowly you go as long as you do not stop.",
-    author: "Confucius"
+    author: "Confucius",
   },
   {
-    content: "Success is not final, failure is not fatal: it is the courage to continue that counts.",
-    author: "Winston Churchill"
+    content:
+      "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+    author: "Winston Churchill",
   },
   {
-    content: "The future belongs to those who believe in the beauty of their dreams.",
-    author: "Eleanor Roosevelt"
+    content:
+      "The future belongs to those who believe in the beauty of their dreams.",
+    author: "Eleanor Roosevelt",
   },
   {
     content: "Strive not to be a success, but rather to be of value.",
-    author: "Albert Einstein"
+    author: "Albert Einstein",
   },
   {
-    content: "The only limit to our realization of tomorrow will be our doubts of today.",
-    author: "Franklin D. Roosevelt"
+    content:
+      "The only limit to our realization of tomorrow will be our doubts of today.",
+    author: "Franklin D. Roosevelt",
   },
   {
     content: "Do what you can, with what you have, where you are.",
-    author: "Theodore Roosevelt"
+    author: "Theodore Roosevelt",
   },
   {
     content: "Everything you've ever wanted is on the other side of fear.",
-    author: "George Addair"
+    author: "George Addair",
   },
   {
-    content: "Success is not how high you have climbed, but how you make a positive difference to the world.",
-    author: "Roy T. Bennett"
-  }
+    content:
+      "Success is not how high you have climbed, but how you make a positive difference to the world.",
+    author: "Roy T. Bennett",
+  },
 ];
 
 function App() {
+  const [targetDate, setTargetDate] = useState<Date>(() => {
+    const savedDate = localStorage.getItem("targetDate");
+    return savedDate ? new Date(savedDate) : new Date("2025-06-10T00:00:00");
+  });
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
     days: 0,
     hours: 0,
@@ -72,6 +89,18 @@ function App() {
   });
   const [progress, setProgress] = useState(0);
   const [quote, setQuote] = useState<Quote>(quotes[0]);
+
+  const TOTAL_TIME = targetDate.getTime() - START_DATE.getTime();
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setTargetDate(date);
+      localStorage.setItem("targetDate", date.toISOString());
+      setIsDialogOpen(false);
+    }
+  };
+
+  const formattedDate = format(targetDate, "MMMM d, yyyy");
 
   useEffect(() => {
     const getRandomQuote = () => {
@@ -87,7 +116,7 @@ function App() {
 
   useEffect(() => {
     const calculateTimeLeft = () => {
-      const difference = TARGET_DATE.getTime() - new Date().getTime();
+      const difference = targetDate.getTime() - new Date().getTime();
       const timeRemaining = {
         days: Math.floor(difference / (1000 * 60 * 60 * 24)),
         hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
@@ -107,7 +136,7 @@ function App() {
     const timer = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [targetDate, TOTAL_TIME]);
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-background">
@@ -126,7 +155,13 @@ function App() {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.8 }}
               >
-                Time Until June 10, 2025
+                Time Until{" "}
+                <span
+                  onClick={() => setIsDialogOpen(true)}
+                  className=" border-b border-dashed border-cyan-400/60 hover:border-cyan-300 hover:text-cyan-300 cursor-pointer transition-colors hover:font-medium "
+                >
+                  {formattedDate}
+                </span>
               </motion.h1>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 w-full max-w-xl">
@@ -172,6 +207,21 @@ function App() {
           </Card>
         </motion.div>
       </LampContainer>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Select Target Date</DialogTitle>
+          </DialogHeader>
+          <Calendar
+            mode="single"
+            selected={targetDate}
+            onSelect={handleDateSelect}
+            disabled={(date) => date < new Date() || date < START_DATE}
+            // initialFocus
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
